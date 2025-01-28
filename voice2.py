@@ -96,7 +96,7 @@ def removeNestedParentheses(s):
 
 def dialogueAI(prompt):
     headers = {"Content-Type": "application/json"}
-    data = {"model": "meta-llama:latest", "prompt": prompt, "stream": False}
+    data = {"model": "llama3.2:latest", "prompt": prompt, "stream": False}
     r = requests.post("http://localhost:11434/api/generate", headers=headers, data=json.dumps(data))
     resp = json.loads(r.text)
     return resp["response"]
@@ -111,6 +111,7 @@ def say2User(answer):
 
 def listenUser():
     is_listen = True
+    s = ''
     while is_listen:
         voice_input = record_and_recognize_audio()
         s += ' '+voice_input
@@ -184,7 +185,6 @@ if __name__ == "__main__":
 
         #ответ верный, надо похвалить и переходим к следующей теме
         praise_prompt = 'Вы - учитель истории, задали вопрос по теме: "'+one_lesson+'". Ученик ответил правильно: "'+voice_input+'". Похвали ученика. Выдели похвалу разметкой <praise>'
-        print(praise_prompt)
         answer = dialogueAI(praise_prompt)
         #выделим оценку ответа от искина
         p0 = answer.find('<praise>')
@@ -193,6 +193,4 @@ if __name__ == "__main__":
         print(answer)
         say2User(answer)
 
-        sys.exit()
 
-    prompt = ''
