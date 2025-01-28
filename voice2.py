@@ -95,17 +95,11 @@ def removeNestedParentheses(s):
     return ret
 
 def dialogueAI(prompt):
-    answer = ''
-    is_listen = True
     headers = {"Content-Type": "application/json"}
     data = {"model": "meta-llama:latest", "prompt": prompt, "stream": False}
-    while is_listen:
-        r = requests.post("http://localhost:11434/api/generate", headers=headers, data=json.dumps(data))
-        resp = json.loads(r.text)
-        answer += ' '+ resp["response"]
-        if answer != '' and resp["response"] == '':
-            is_listen = False
-    return answer
+    r = requests.post("http://localhost:11434/api/generate", headers=headers, data=json.dumps(data))
+    resp = json.loads(r.text)
+    return resp["response"]
 
 def say2User(answer):
     if answer != '':
@@ -114,6 +108,15 @@ def say2User(answer):
         # Воспроизведение аудиофайла
         audio_file = os.path.dirname(__file__) + '\output.mp3'
         playsound(audio_file)
+
+def listenUser():
+    is_listen = True
+    while is_listen:
+        voice_input = record_and_recognize_audio()
+        s += ' '+voice_input
+        if s != '' and voice_input == '':
+            is_listen = False
+    return s
 
 print(__name__)
 
@@ -142,7 +145,7 @@ if __name__ == "__main__":
         #вариант 1 текст это для отладки
         #voice_input = input("Введите ответ: ")
         #вариант 2 голос
-        voice_input = record_and_recognize_audio()
+        voice_input = listenUser()
         print("voice_input: "+voice_input)
 
         #отдать ответ ученика на проверку искину
@@ -167,7 +170,7 @@ if __name__ == "__main__":
 
             #ЖДЕМ ПРАИвильного ответа
             #voice_input = input("Введите правильный ответ: ")
-            voice_input = record_and_recognize_audio()
+            voice_input = listenUser()
             print("voice_input: "+voice_input)
 
             #отдать ответ ученика на проверку искину
@@ -193,34 +196,3 @@ if __name__ == "__main__":
         sys.exit()
 
     prompt = ''
-
-    while True:
-        # старт записи речи с последующим выводом распознанной речи
-        # и удалением записанного в микрофон аудио
-        voice_input = record_and_recognize_audio()
-        os.remove("microphone-results.wav")
-        print("voice_input: "+voice_input)
-
-        prompt += ' '+voice_input
-        if prompt != '' and voice_input == '':
-            headers = {"Content-Type": "application/json"}
-            data = {"model": "meta-llama:latest", "prompt": prompt, "stream": False}
-
-            print("prompt: "+prompt)
-
-            r = requests.post("http://localhost:11434/api/generate", headers=headers, data=json.dumps(data))
-            response_text = r.text
-            data = json.loads(response_text)
-            answer = data["response"]
-            answer = removeNestedParentheses(answer)
-            print(answer)
-
-            prompt = ''
-            
-            if answer != '':
-                tts = gTTS(answer, lang='ru')
-                tts.save("output.mp3")
-                # Воспроизведение аудиофайла
-                audio_file = os.path.dirname(__file__) + '\output.mp3'
-                print(audio_file)
-                playsound(audio_file)
